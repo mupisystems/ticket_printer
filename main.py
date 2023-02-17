@@ -1,37 +1,14 @@
-from escpos.printer import Network
+from subprocess import check_output
 from flask import Flask, request, jsonify
 
+
 app = Flask(__name__)
-host = '192.168.1.100'  # Printer IP Address
-
-try:
-    printer = Network(host=host)
-except Exception as excp:
-    print(excp)
-
-
-def reconnect():
-    global printer
-    try:
-        if not printer:
-            printer = Network(host=host)
-        if not printer.device:
-            printer.open()
-        return True
-    except Exception as excp:
-        print(excp)
-        return False
 
 
 @app.route('/imprimir', methods=['GET', 'POST'])
 def printer_connect():
     # if request.method == 'POST' and request.is_json:
     if request.method == 'POST':
-        global printer
-
-        if (not printer or not printer.device) and not reconnect():
-            return jsonify(status=404, data={'error': 'Unable to connect to printer'})
-
         header = request.args.get('header')
         footer = request.args.get('footer')
         code = request.args.get('code')
@@ -40,37 +17,32 @@ def printer_connect():
         created_date = request.args.get('created_date')
         services = request.args.get('services')
 
-        # print(header)
-        # print(footer)
-        # print(code)
-        # print(client_name)
-        # print(qr_code)
-        # print(created_date)
-        # print(services)
-
-        # Print text
+        width = 40
+        text_ticket = []
         if header:
-            printer.set(font="a", height=2, align="center")
-            printer.text(header + '\n')
-            printer.set(font="a", height=2, align="left")
-        if client_name:
-            printer.text(client_name + '\n')
-        if code:
-            printer.text(code + '\n')
+            text_ticket.append(header.center(width) + '\n\n')
         if created_date:
-            printer.text(created_date + '\n')
+            text_ticket.append(created_date + '\n\n')
+        if client_name:
+            text_ticket.append('Cliente'.center(width) + '\n\n')
+            text_ticket.append(client_name.center(width) + '\n\n')
+        if code:
+            text_ticket.append('Senha'.center(width) + '\n\n')
+            text_ticket.append(code.center(width) + '\n\n')
         if services:
-            printer.text(services + '\n')
-
-        # Print QR Code
-        if qr_code:
-            printer.qr(content=qr_code)
-
+            text_ticket.append(services + '\n\n')
         if footer:
-            printer.text(footer + '\n')
+            text_ticket.append(footer + '\n\n')
 
-        #  Cut paper
-        printer.cut()
+        # if qr_code:
+        #     img = qrcode.make(qr_code)
+        #     img.save('QRCode.png')
+
+        file = open('C:\printer-temp\ticket-printer.txt', 'w')
+        file.writelines(text_ticket)
+        file.close()
+
+        check_output("cmd /c type c:\\printer-temp\\ticket-printer.txt > \\\\localhost\\ticket-printer", shell=True)
 
         return jsonify(status=200)
     return jsonify(status=404)
