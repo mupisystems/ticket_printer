@@ -8,7 +8,7 @@ app = Flask(__name__)
 @app.route('/imprimir', methods=['GET', 'POST'])
 def printer_connect():
     # if request.method == 'POST' and request.is_json:
-    if request.method == 'POST':
+    if request.method == 'GET':
         header = request.args.get('header')
         footer = request.args.get('footer')
         code = request.args.get('code')
@@ -16,6 +16,14 @@ def printer_connect():
         qr_code = request.args.get('qr_code')
         created_date = request.args.get('created_date')
         services = request.args.get('services')
+
+        # print(header)
+        # print(footer)
+        # print(code)
+        # print(client_name)
+        # print(qr_code)
+        # print(created_date)
+        # print(services)
 
         width = 40
         text_ticket = []
